@@ -26,7 +26,7 @@ function _log(level: LogLevel, event: string, data?: unknown): void {
 export const log = {
   debug: (event: string, data?: unknown) => _log('debug', event, data),
   info:  (event: string, data?: unknown) => _log('info',  event, data),
-  warm:  (event: string, data?: unknown) => _log('warn',  event, data),
+  warn:  (event: string, data?: unknown) => _log('warn',  event, data),
   error: (event: string, data?: unknown) => _log('error', event, data),
 };
 
