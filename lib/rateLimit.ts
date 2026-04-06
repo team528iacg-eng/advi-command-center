@@ -1,22 +1,14 @@
-/**
- * lib/rateLimit.ts
- *
- * Lightweight, edge-compatible rate limiter using in-memory sliding window.
- * No Redis dependency — works on Vercel Edge Functions.
- */
-
-interface Window { count: number; resetAt: number; }
-
+interface RateLimitWindow { count: number; resetAt: number; }
 interface RateLimitResult { ok: boolean; remaining: number; resetAt: number; limit: number; }
 
-const _store = new Map<string, Window>();
+const _store = new Map<string, RateLimitWindow>();
 
 let _cleanupTimer: NodeJS.Timeout | null = null;
 function _ensureCleanup() {
   if (_cleanupTimer) return;
   _cleanupTimer = setInterval(() => {
     const now = Date.now();
-    for (const [key, window] of _store) { if (window.resetAt < now) _store.delete(key); }
+    _store.forEach((window, key) => { if (window.resetAt < now) _store.delete(key); });
   }, 5 * 60_000);
   if (_cleanupTimer.unref) _cleanupTimer.unref();
 }
