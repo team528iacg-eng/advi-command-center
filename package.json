@@ -1,0 +1,60 @@
+{
+  "name": "advi-command-center",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:migrate": "node scripts/migrate.js",
+    "db:seed": "node scripts/seed.js",
+    "auth:hash": "node scripts/hash-passwords.js",
+    "test:auth": "node scripts/test-auth.js",
+    "test:api": "node scripts/test-api.js",
+    "test:tasks": "node scripts/test-tasks.js",
+    "test:profile": "node scripts/test-profile.js",
+    "dev:socket": "node server/index.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:socket\"",
+    "test:inbox": "node scripts/test-inbox.js",
+    "test:ai": "node scripts/test-ai.js",
+    "test:all": "npm run test:auth && npm run test:tasks && npm run test:profile && npm run test:inbox && npm run test:ai && npm run test:docs && npm run test:monitor && npm run test:notifications",
+    "deploy": "vercel deploy --prod",
+    "test:docs": "node scripts/test-docs.js",
+    "test:monitor": "node scripts/test-monitor.js",
+    "test:notifications": "node scripts/test-notifications.js",
+    "type-check": "tsc --noEmit",
+    "prebuild": "node scripts/pre-build-check.js",
+    "setup": "bash scripts/setup.sh",
+    "env:vercel": "node scripts/copy-env-for-vercel.js",
+    "deploy:socket": "echo \"Push to Railway \u2014 see railway.toml and PRODUCTION.md\""
+  },
+  "dependencies": {
+    "next": "14.2.3",
+    "react": "^18",
+    "react-dom": "^18",
+    "@supabase/supabase-js": "^2.43.1",
+    "@supabase/ssr": "^0.3.0",
+    "next-auth": "^4.24.7",
+    "bcryptjs": "^2.4.3",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5",
+    "concurrently": "^8.2.2",
+    "@anthropic-ai/sdk": "^0.24.3",
+    "pdf-parse": "^1.1.1",
+    "mammoth": "^1.7.1"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/bcryptjs": "^2.4.6",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
