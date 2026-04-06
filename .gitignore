@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+.next/
+
+# Env
+.env.local
+.env.production
+
+!.env.example
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# OS
+.DS_Store
