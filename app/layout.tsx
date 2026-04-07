@@ -1,14 +1,5 @@
 import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Advi Command Center',
-  description: 'AI-powered project management for creative studios',
-};
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  );
+export const metadata = { title: 'Advi Command Center', description: 'Studio Management Platform' };
+export default function RootLayout({ children }) {
+  return <html lang="en"><body style={{ margin: 0, backgroundColor: '#0a0a0a' }}>{children}</body></html>;
 }
