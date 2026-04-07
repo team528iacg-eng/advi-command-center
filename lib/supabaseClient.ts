@@ -1,14 +1,29 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+// Use placeholder if env var is not set (during Next.js static analysis phase)
+// At runtime, the real env var is always available
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-export const supabase: SupabaseClient<Database> = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Browser/client-side Supabase client
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-let _admin: SupabaseClient<Database> | null = null;
-export function getSupabaseAdmin(): SupabaseClient<Database> {
-  if (!_admin) _admin = createClient<Database>(SUPABASE_URL, SERVICE_ROLE_KEY);
+// Server-side admin client (lazy singleton)
+let _admin: SupabaseClient | null = null;
+
+export function getSupabaseAdmin(): SupabaseClient {
+  if (!_admin) {
+    _admin = createClient(
+      supabaseUrl,
+      supabaseServiceKey || supabaseAnonKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
+  }
   return _admin;
 }
