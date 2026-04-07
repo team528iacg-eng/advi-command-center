@@ -1,17 +1,18 @@
-/**
- * config/env.ts
- */
-
-function requireEnv(key: string): string {
+// Environment variable validation
+const required = (key: string): string => {
   const val = process.env[key];
-  if (!val) throw new Error(`Missing env var: ${key}`);
+  if (!val) throw new Error(`Missing required env var: ${key}`);
   return val;
-}
+};
 
-export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-export const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
-export const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-export const NODE_ENV = process.env.NODE_ENV ?? 'development';
-export const IS_PROD = NODE_ENV === 'production';
-export const IS_DEV = NODE_ENV === 'development';
+export const env = {
+  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
+  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+  supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? '',
+  nextauthSecret: process.env.NEXTAUTH_SECRET ?? '',
+  nextauthUrl: process.env.NEXTAUTH_URL ?? 'http://localhost:3000',
+  nodeEnv: process.env.NODE_ENV ?? 'development',
+  isProduction: process.env.NODE_ENV === 'production',
+  isDevelopment: process.env.NODE_ENV === 'development',
+} as const;
