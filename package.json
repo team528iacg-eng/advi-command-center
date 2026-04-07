@@ -27,7 +27,7 @@
     "prebuild": "node scripts/pre-build-check.js",
     "setup": "bash scripts/setup.sh",
     "env:vercel": "node scripts/copy-env-for-vercel.js",
-    "deploy:socket": "echo \"Push to Railway \u2014 see railway.toml and PRODUCTION.md\""
+    "deploy:socket": "echo \"Push to Railway — see railway.toml and PRODUCTION.md\""
   },
   "dependencies": {
     "next": "14.2.3",
@@ -54,7 +54,6 @@
     "eslint-config-next": "14.2.3"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": ">=18.0.0 <22.0.0"
   }
 }
