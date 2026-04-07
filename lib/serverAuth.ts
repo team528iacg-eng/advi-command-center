@@ -1,31 +1,26 @@
-import { getServerSession } from 'next-auth/next';
+import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
-import type { NextRequest } from 'next/server';
+import type { Session } from 'next-auth';
 
-export interface RequestUser { id: string; role: string; name: string; }
-
-export function getRequestUser(req: NextRequest): RequestUser | null {
-  const id   = req.headers.get('x-user-id');
-  const role = req.headers.get('x-user-role');
-  const name = decodeURIComponent(req.headers.get('x-user-name') ?? '');
-  if (!id || !role) return null;
-  return { id, role, name };
+export async function getSession(): Promise<Session | null> {
+  return getServerSession(authOptions);
 }
 
-export async function getSessionUser() {
-  const session = await getServerSession(authOptions);
-  return session?.user ?? null;
+export async function requireAuth(): Promise<Session> {
+  const session = await getSession();
+  if (!session?.user?.id) {
+    throw new Error('Unauthorized');
+  }
+  return session;
 }
 
-export function requireAuth(req: NextRequest): RequestUser | Response {
-  const user = getRequestUser(req);
-  if (!user) return Response.json({ ok: false, error: 'Authentication required.', code: 'UNAUTHORIZED' }, { status: 401 });
-  return user;
+export async function isAdmin(): Promise<boolean> {
+  const session = await getSession();
+  return session?.user?.role === 'admin';
 }
 
-export function requireAdmin(req: NextRequest): RequestUser | Response {
-  const user = getRequestUser(req);
-  if (!user) return Response.json({ ok: false, error: 'Authentication required.', code: 'UNAUTHORIZED' }, { status: 401 });
-  if (user.role !== 'admin') return Response.json({ ok: false, error: 'Admin access required.', code: 'FORBIDDEN' }, { status: 403 });
-  return user;
+export async function isDirector(): Promise<boolean> {
+  const session = await getSession();
+  const role = session?.user?.role;
+  return role === 'admin' || role === 'director';
 }
