@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
-export default function Home() {
-  redirect('/advi-preview.html');
+
+export default function RootPage() {
+  redirect('/login');
 }
