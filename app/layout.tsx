@@ -1,5 +1,18 @@
 import type { Metadata } from 'next';
-export const metadata = { title: 'Advi Command Center', description: 'Studio Management Platform' };
-export default function RootLayout({ children }) {
-  return <html lang="en"><body style={{ margin: 0, backgroundColor: '#0a0a0a' }}>{children}</body></html>;
+import './globals.css';
+
+export const metadata: Metadata = {
+  title: 'Advi Command Center',
+  description: 'AI-powered project management for creative studios',
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <head>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+      </head>
+      <body>{children}</body>
+    </html>
+  );
 }
