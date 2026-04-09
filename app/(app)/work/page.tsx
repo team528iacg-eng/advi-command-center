@@ -25,7 +25,6 @@ function PriorityDot({ id }: { id: string }) {
 function TaskRow({ task, onClick }: { task: Task; onClick: () => void }) {
   const { updateTask } = useStore();
   const isDone = task.status === 'done';
-
   return (
     <div className="tr" onClick={onClick}>
       <div onClick={e => { e.stopPropagation(); updateTask(task.id, { status: isDone ? 'todo' : 'done' }); }}>
@@ -38,10 +37,7 @@ function TaskRow({ task, onClick }: { task: Task; onClick: () => void }) {
       </div>
       <div className="cell">
         <div style={{ display: 'flex', gap: 3 }}>
-          {task.assignees.slice(0, 3).map(uid => {
-            const u = getUser(uid);
-            return u ? <div key={uid} className="av" title={u.name} style={{ width: 20, height: 20, fontSize: 8, background: u.bg, color: u.color }}>{u.initials}</div> : null;
-          })}
+          {task.assignees.slice(0, 3).map(uid => { const u = getUser(uid); return u ? <div key={uid} className="av" title={u.name} style={{ width: 20, height: 20, fontSize: 8, background: u.bg, color: u.color }}>{u.initials}</div> : null; })}
         </div>
       </div>
       <div className="cell" style={{ color: task.due < today && !isDone ? '#EF4444' : undefined }}>
@@ -95,12 +91,14 @@ function BoardView({ tasks, onSelect }: { tasks: Task[]; onSelect: (t: Task) => 
 
 export default function WorkPage() {
   const { tasks, addTask } = useStore();
+  const selectedSpaceId = useStore(s => s.selectedSpaceId);
+  const spaceTasks = tasks.filter(t => t.spaceId === selectedSpaceId);
   const [view, setView] = useState<'list' | 'board' | 'cal'>('list');
   const [tab, setTab] = useState<'all' | 'done'>('all');
   const [showNew, setShowNew] = useState(false);
   const [selected, setSelected] = useState<Task | null>(null);
 
-  const visibleTasks = tab === 'done' ? tasks.filter(t => t.status === 'done') : tasks.filter(t => t.status !== 'done');
+  const visibleTasks = tab === 'done' ? spaceTasks.filter(t => t.status === 'done') : spaceTasks.filter(t => t.status !== 'done');
   const groups = STATUSES.filter(s => visibleTasks.some(t => t.status === s.id));
 
   return (
@@ -109,13 +107,13 @@ export default function WorkPage() {
         <div className="wktabs">
           <button className={`wktab ${tab === 'all' ? 'on' : ''}`} onClick={() => setTab('all')}>All Tasks</button>
           <button className={`wktab ${tab === 'done' ? 'on' : ''}`} onClick={() => setTab('done')}>
-            Completed <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 8, background: 'var(--bd)', color: 'var(--tx3)' }}>{tasks.filter(t => t.status === 'done').length}</span>
+            Completed <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 8, background: 'var(--bd)', color: 'var(--tx3)' }}>{spaceTasks.filter(t => t.status === 'done').length}</span>
           </button>
         </div>
         <div className="vtabs">
           <button className={`vtab ${view === 'list' ? 'on' : ''}`} onClick={() => setView('list')}>☰ List</button>
-          <button className={`vtab ${view === 'board' ? 'on' : ''}`} onClick={() => setView('board')}>⊞ Board</button>
-          <button className={`vtab ${view === 'cal' ? 'on' : ''}`} onClick={() => setView('cal')}>◫ Calendar</button>
+          <button className={`vtab ${view === 'board' ? 'on' : ''}`} onClick={() => setView('board')}>⊚' Board</button>
+          <button className={`vtab ${view === 'cal' ? 'on' : ''}`} onClick={() => setView('cal')}>◫� Calendar</button>
         </div>
         <button className="tbtn p" style={{ marginLeft: 'auto' }} onClick={() => setShowNew(true)}>+ New Task</button>
       </div>
@@ -150,7 +148,7 @@ export default function WorkPage() {
         </div>
       )}
 
-      {showNew && <NewTaskModal onClose={() => setShowNew(false)} />}
+      {showNew && <NewTaskModal onClose={() => setShowNew(false)} defaultSpaceId={selectedSpaceId} />}
       {selected && <TaskDetail task={selected} onClose={() => setSelected(null)} />}
     </div>
   );
@@ -161,20 +159,14 @@ function CalendarView({ tasks, onSelect }: { tasks: Task[]; onSelect: (t: Task) 
   const year = now.getFullYear(); const month = now.getMonth();
   const first = new Date(year, month, 1).getDay();
   const days = new Date(year, month + 1, 0).getDate();
-  const cells = Array.from({ length: 42 }, (_, i) => {
-    const d = i - first + 1;
-    return d >= 1 && d <= days ? d : null;
-  });
-
+  const cells = Array.from({ length: 42 }, (_, i) => { const d = i - first + 1; return d >= 1 && d <= days ? d : null; });
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h3 style={{ fontSize: 16, fontWeight: 700 }}>{now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 1, background: 'var(--bd)', borderRadius: 12, overflow: 'hidden', border: '1.5px solid var(--bd)' }}>
-        {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
-          <div key={d} style={{ background: 'var(--bg)', padding: '8px 0', textAlign: 'center', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', letterSpacing: '.1em' }}>{d}</div>
-        ))}
+        {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => <div key={d} style={{ background: 'var(--bg)', padding: '8px 0', textAlign: 'center', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', letterSpacing: '.1em' }}>{d}</div>)}
         {cells.map((d, i) => {
           const dateStr = d ? `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}` : '';
           const dayTasks = d ? tasks.filter(t => t.due === dateStr) : [];
@@ -182,10 +174,7 @@ function CalendarView({ tasks, onSelect }: { tasks: Task[]; onSelect: (t: Task) 
           return (
             <div key={i} style={{ background: isToday ? '#EDE9FE' : 'var(--sf)', minHeight: 88, padding: '6px 8px' }}>
               {d && <div style={{ fontSize: 12, fontWeight: isToday ? 800 : 400, color: isToday ? '#7C3AED' : 'var(--tx3)', marginBottom: 4 }}>{d}</div>}
-              {dayTasks.map(t => {
-                const st = getStatus(t.status);
-                return <div key={t.id} className="cal-task" style={{ background: st?.bg, color: st?.color, cursor: 'pointer' }} onClick={() => onSelect(t)}>{t.title}</div>;
-              })}
+              {dayTasks.map(t => { const st = getStatus(t.status); return <div key={t.id} className="cal-task" style={{ background: st?.bg, color: st?.color, cursor: 'pointer' }} onClick={() => onSelect(t)}>{t.title}</div>; })}
             </div>
           );
         })}
