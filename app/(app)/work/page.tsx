@@ -143,9 +143,9 @@ export default function WorkPage() {
           </button>
         </div>
         <div className="vtabs">
-          <button className={`vtab ${view === 'list' ? 'on' : ''}`} onClick={() => setView('list')}>☰ List</button>
-          <button className={`vtab ${view === 'board' ? 'on' : ''}`} onClick={() => setView('board')}>⊞ Board</button>
-          <button className={`vtab ${view === 'cal' ? 'on' : ''}`} onClick={() => setView('cal')}>◫ Calendar</button>
+          <button className={`button ${view === 'list' ? 'on' : ''}`} onClick={() => setView('list')}>☸ List</button>
+          <button className={`button ${view === 'board' ? 'on' : ''}`} onClick={() => setView('board')}>⊞ Board</button>
+          <button className={`button ${view === 'cal' ? 'on' : ''}`} onClick={() => setView('cal')}>◫ Calendar</button>
         </div>
         <button className="tbtn p" style={{ marginLeft: 'auto' }} onClick={() => setShowNew(true)}>+ New Task</button>
       </div>
