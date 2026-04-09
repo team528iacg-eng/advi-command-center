@@ -1,9 +1,10 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { USERS, LISTS, STATUSES, PRIORITIES, Task } from '@/lib/data';
 import NewTaskModal from '@/components/NewTaskModal';
 import TaskDetail from '@/components/TaskDetail';
+import { getSocket, joinRoom, leaveRoom } from '@/lib/socket';
 
 const today = new Date().toISOString().split('T')[0];
 
@@ -103,8 +104,26 @@ function BoardView({ tasks, onSelect }: { tasks: Task[]; onSelect: (t: Task) => 
 }
 
 export default function WorkPage() {
-  const { tasks, addTask } = useStore();
+  const { tasks, addTask, updateTask, user } = useStore();
   const selectedSpaceId = useStore(s => s.selectedSpaceId);
+
+  // ── Real-time: join space room + listen for task_updated ──
+  useEffect(() => {
+    if (!selectedSpaceId) return;
+    joinRoom(selectedSpaceId);
+    const socket = getSocket();
+    if (!socket) return;
+    const handler = (data: { id: string; patch: Partial<Task>; userId: string }) => {
+      // Ignore our own echoes (already applied optimistically)
+      if (data.userId === user?.id) return;
+      updateTask(data.id, data.patch);
+    };
+    socket.on('task_updated', handler);
+    return () => {
+      socket.off('task_updated', handler);
+      leaveRoom(selectedSpaceId);
+    };
+  }, [selectedSpaceId, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const spaceTasks = tasks.filter(t => t.spaceId === selectedSpaceId);
   const [view, setView] = useState<'list' | 'board' | 'cal'>('list');
   const [tab, setTab] = useState<'all' | 'done'>('all');
