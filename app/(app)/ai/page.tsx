@@ -152,7 +152,7 @@ Keep responses concise and actionable. Use bullet points for lists. Be encouragi
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
       <div style={{ padding: '14px 20px', borderBottom: '1.5px solid var(--bd)', background: 'var(--sf)', flexShrink: 0 }}>
-        <b�b style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)' }}>AI Assistant</h2>
+        <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)' }}>AI Assistant</h2>
         <p style={{ fontSize: 11, color: 'var(--tx3)' }}>Task-aware · Claude Sonnet · 🎙 Voice commands supported</p>
       </div>
       <div className="ai-msgs" ref={msgsRef}>
@@ -206,7 +206,7 @@ Keep responses concise and actionable. Use bullet points for lists. Be encouragi
             disabled={loading}
             style={{ padding: '8px 16px', borderRadius: 7, border: 'none', background: 'var(--ac)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: loading ? .5 : 1 }}
           >
-             ↑
+            ↑
           </button>
         </div>
       </div>
