@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useStore } from '@/lib/store';
-import { USERS, Conversation } from '@/lib/data';
+import { USERS, Conversation, Message } from '@/lib/data';
+import { getSocket, joinRoom, leaveRoom } from '@/lib/socket';
 
 export default function InboxPage() {
   const { user, messages, sendMessage, conversations, lastRead, createConversation, markRead } = useStore();
@@ -59,6 +60,24 @@ export default function InboxPage() {
   useEffect(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
   }, [thread.length]);
+
+  // ── Real-time: join active conversation room + listen for message_sent ──
+  useEffect(() => {
+    if (!activeConvId) return;
+    joinRoom(activeConvId);
+    const socket = getSocket();
+    if (!socket) return;
+    const handler = (data: { message: Message; userId: string }) => {
+      // Ignore our own echoes (already applied optimistically)
+      if (data.userId === user?.id) return;
+      useStore.getState().sendMessage(data.message);
+    };
+    socket.on('message_sent', handler);
+    return () => {
+      socket.off('message_sent', handler);
+      leaveRoom(activeConvId);
+    };
+  }, [activeConvId, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openConversation = (convId: string) => {
     setActivePeer(convId);
@@ -184,7 +203,7 @@ export default function InboxPage() {
               })}
             </div>
             <div className="chat-inp-row">
-              <input className="finp" style={{ flex: 1 }} placeholder={`Message ${chatName}…g`} value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()} />
+              <input className="finp" style={{ flex: 1 }} placeholder={`Message ${chatName}…}] value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()} />
               <button onClick={send} style={{ padding: '8px 16px', borderRadius: 7, border: 'none', background: 'var(--ac)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>↑</button>
             </div>
           </>
