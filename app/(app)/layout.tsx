@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
@@ -8,7 +8,7 @@ import NewTaskModal from '@/components/NewTaskModal';
 import Toast, { useToast } from '@/components/Toast';
 
 const NAV = [
-  { href: '/dashboard', label: 'Dashboard', icon: '⊚', id: 'home' },
+  { href: '/dashboard', label: 'Dashboard', icon: '⊞', id: 'home' },
   { href: '/work',      label: 'My Work',   icon: '◎', id: 'work' },
   { href: '/inbox',     label: 'Inbox',     icon: '✉', id: 'inbox', badge: true },
 ];
@@ -70,8 +70,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
-        <div className="srch" onClick={() => addToast('⌕', '┈K opens command palette', '#7C3AED')}>
-          <span>⌕</span><span style={{ flex: 1 }}>Search…</span><span className="kbd">┈K</span>
+        <div className="srch" onClick={() => addToast('⌕', '⌘K opens command palette', '#7C3AED')}>
+          <span>⌕</span><span style={{ flex: 1 }}>Search…</span><span className="kbd">⌘K</span>
         </div>
         <nav>
           {NAV.map(n => (
@@ -113,7 +113,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   <div
                     className={`sp-item ${isActive ? 'on' : ''}`}
                     onClick={() => setSelectedSpaceId(sp.id)}
-                    onDoubleClick={() => startRename(sp)}
+                    onDoubleClick={user.isAdmin ? () => startRename(sp) : undefined}
                     title="Double-click to rename"
                   >
                     <span className="spdot" style={{ background: sp.color }} />
@@ -126,7 +126,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           })}
           <div className="ndiv" />
           <div className="nsec">Intelligence</div>
-          {INTEL.map(n => (
+          {INTEL.filter(n => n.href !== '/monitor' || user.isAdmin).map(n => (
             <Link key={n.href} href={n.href} style={{ textDecoration: 'none' }}>
               <div className={`ni ${pathname === n.href ? 'on' : ''}`}>
                 <span className="ic">{n.icon}</span>{n.label}
@@ -159,7 +159,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <span className="ttl" id="page-title">
             {NAV.concat(INTEL as any).find(n => pathname.startsWith(n.href))?.label ?? 'Advi'}
           </span>
-          <span className="live"><span className="livdot" />Live</span>
+          <span className="live"><span className="livedot" />Live</span>
           <div className="tdiv" />
           <button className="tbtn v" onClick={() => addToast('🎙', 'Voice commands require microphone access', '#7C3AED')}>🎙 Voice</button>
           <button className="tbtn" onClick={() => setShowNewTask(true)}>+ Task</button>
