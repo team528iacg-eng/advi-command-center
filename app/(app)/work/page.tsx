@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useStore } from '@/lib/store';
 import { USERS, LISTS, STATUSES, PRIORITIES, Task } from '@/lib/data';
 import NewTaskModal from '@/components/NewTaskModal';
@@ -58,20 +58,29 @@ function TaskRow({ task, onClick }: { task: Task; onClick: () => void }) {
 }
 
 function BoardView({ tasks, onSelect }: { tasks: Task[]; onSelect: (t: Task) => void }) {
+  const { updateTask } = useStore();
+  const dragId = useRef('');
+
   return (
     <div style={{ flex: 1, overflow: 'hidden' }}>
       <div className="board">
         {STATUSES.filter(s => s.id !== 'done' || tasks.some(t => t.status === 'done')).map(st => {
           const cols = tasks.filter(t => t.status === st.id);
           return (
-            <div key={st.id} className="bcol" style={{ width: 260 }}>
+            <div key={st.id} className="bcol" style={{ width: 260 }}
+              onDragOver={e => e.preventDefault()}
+              onDrop={() => { if (dragId.current) { updateTask(dragId.current, { status: st.id }); dragId.current = ''; } }}
+            >
               <div className="bch">
                 <div className="sbdg" style={{ color: st.color, background: st.bg }}>{st.label}</div>
                 <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', marginLeft: 'auto' }}>{cols.length}</span>
               </div>
               <div style={{ padding: '10px 10px 2px', flex: 1, overflowY: 'auto' }}>
                 {cols.map(t => (
-                  <div key={t.id} className="bcard" onClick={() => onSelect(t)}>
+                  <div key={t.id} className="bcard" onClick={() => onSelect(t)}
+                    draggable
+                    onDragStart={() => { dragId.current = t.id; }}
+                  >
                     <div style={{ fontSize: 11, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: getList(t.list)?.color + '20', color: getList(t.list)?.color, display: 'inline-block', marginBottom: 6 }}>{getList(t.list)?.name}</div>
                     <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)', marginBottom: 8, lineHeight: 1.4 }}>{t.title}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -186,7 +195,7 @@ function CalendarView({ tasks, onSelect }: { tasks: Task[]; onSelect: (t: Task) 
               {d && <div style={{ fontSize: 12, fontWeight: isToday ? 800 : 400, color: isToday ? '#7C3AED' : 'var(--tx3)', marginBottom: 4 }}>{d}</div>}
               {dayTasks.map(t => {
                 const st = getStatus(t.status);
-                return <div key={t.id} className="cal-task" style={{ background: st?.bg, color: st?.color, cursor: 'pointer' }} onClick={() => onSelect(t)}>{t.title}</div>;
+                return <div key={t.id} className="cal-task" style=[ï background: st?.bg, color: st?.color, cursor: 'pointer' }} onClick={() => onSelect(t)}>{t.title}</div>;
               })}
             </div>
           );
