@@ -2,17 +2,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { USERS, LISTS, STATUSES } from '@/lib/data';
+import { parseCommand } from '@/lib/aiCommandParser';
 
 type Msg = { role: 'user' | 'assistant'; text: string };
 
 export default function AIPage() {
-  const { user, tasks, updateTask, addTask } = useStore();
+  const { user, users, tasks, updateTask, addTask, selectedSpaceId } = useStore();
   const [msgs, setMsgs] = useState<Msg[]>([
-    { role: 'assistant', text: "Hi! I'm your Advi AI — I have full context of your tasks, sprints, team, and docs. Ask me anything.\n\nTip: Try questions like \"What's my next task?\", \"Which tasks are overdue?\", or commands like \"Mark [task] as done\"." }
+    { role: 'assistant', text: "Hi! I'm your Advi AI — I have full context of your tasks, sprints, team, and docs. Ask me anything.\n\nTip: Try questions like \"What's my next task?\", \"Which tasks are overdue?\", or voice commands like \"Create task colour grade scene 5\" or \"Mark GPU cluster setup as done\"." }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [listening, setListening] = useState(false);
   const msgsRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => { if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight; }, [msgs]);
 
@@ -43,17 +46,93 @@ You can:
 - Give sprint status summaries
 - Help prioritize work
 
-When the user asks to create a task, respond with a brief confirmation and the details you'd create.
 Keep responses concise and actionable. Use bullet points for lists. Be encouraging and professional.`;
+
+  const toggleVoice = () => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      setMsgs(m => [...m, { role: 'assistant', text: '🎙 Voice input is not supported in this browser. Please use Chrome or Edge.' }]);
+      return;
+    }
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+    const rec = new SR();
+    recognitionRef.current = rec;
+    rec.lang = 'en-US';
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.onresult = (e: any) => {
+      const transcript: string = e.results[0][0].transcript;
+      setListening(false);
+      send(transcript);
+    };
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+    rec.start();
+    setListening(true);
+  };
 
   const send = async (q?: string) => {
     const text = (q ?? input).trim();
     if (!text) return;
-    const newMsgs = [...msgs, { role: 'user' as const, text }];
+    const newMsgs: Msg[] = [...msgs, { role: 'user', text }];
     setMsgs(newMsgs);
     setInput('');
-    setLoading(true);
 
+    // ── Command parser: intercept task actions before hitting Claude API ──
+    const cmd = parseCommand(text, tasks, users.length ? users : USERS);
+
+    if (cmd.action === 'create_task' && cmd.title) {
+      const newTask = {
+        id: 't' + Date.now(),
+        title: cmd.title,
+        list: 'l1',
+        spaceId: cmd.spaceId ?? selectedSpaceId ?? '528',
+        status: 'todo',
+        priority: cmd.priority ?? 'normal',
+        assignees: cmd.assignees ?? [],
+        due: cmd.dueDate ?? '',
+        est: 60,
+        logged: 0,
+        description: '',
+        subtasks: [],
+        comments: [],
+        tags: [],
+        createdAt: new Date().toISOString(),
+      };
+      addTask(newTask);
+      const who = (cmd.assignees ?? []).map(id => users.find(u => u.id === id)?.name ?? id).filter(Boolean).join(', ');
+      const reply = [
+        `✅ Task created: "${cmd.title}"`,
+        `• Priority: ${cmd.priority ?? 'normal'}`,
+        who ? `• Assigned to: ${who}` : `• Assignees: none`,
+        cmd.dueDate ? `• Due: ${cmd.dueDate}` : `• Due: not set`,
+      ].join('\n');
+      setMsgs(m => [...m, { role: 'assistant', text: reply }]);
+      return;
+    }
+
+    if (cmd.action === 'update_task' && cmd.taskId && cmd.status) {
+      updateTask(cmd.taskId, { status: cmd.status });
+      const label = STATUSES.find(s => s.id === cmd.status)?.label ?? cmd.status;
+      setMsgs(m => [...m, { role: 'assistant', text: `✅ Updated "${cmd.title}" → ${label}` }]);
+      return;
+    }
+
+    if (cmd.action === 'assign_task' && cmd.taskId && cmd.assignees?.length) {
+      const existing = tasks.find(t => t.id === cmd.taskId)?.assignees ?? [];
+      const merged = [...new Set([...existing, ...cmd.assignees])];
+      updateTask(cmd.taskId, { assignees: merged });
+      const names = cmd.assignees.map(id => users.find(u => u.id === id)?.name ?? id).join(', ');
+      setMsgs(m => [...m, { role: 'assistant', text: `✅ Assigned "${cmd.title}" to ${names}` }]);
+      return;
+    }
+
+    // ── No command matched — forward to Claude API ──
+    setLoading(true);
     try {
       const res = await fetch('/api/ai', {
         method: 'POST',
@@ -73,7 +152,7 @@ Keep responses concise and actionable. Use bullet points for lists. Be encouragi
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
       <div style={{ padding: '14px 20px', borderBottom: '1.5px solid var(--bd)', background: 'var(--sf)', flexShrink: 0 }}>
-        <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)' }}>AI Assistant</h2>
+        <b�b style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)' }}>AI Assistant</h2>
         <p style={{ fontSize: 11, color: 'var(--tx3)' }}>Task-aware · Claude Sonnet · 🎙 Voice commands supported</p>
       </div>
       <div className="ai-msgs" ref={msgsRef}>
@@ -100,8 +179,35 @@ Keep responses concise and actionable. Use bullet points for lists. Be encouragi
           {quickQuestions.map(q => <button key={q} className="qq" onClick={() => send(q)}>{q}</button>)}
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <input id="ai-inp" className="finp" style={{ flex: 1 }} placeholder="Ask about tasks, sprints, docs…" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()} />
-          <button onClick={() => send()} disabled={loading} style={{ padding: '8px 16px', borderRadius: 7, border: 'none', background: 'var(--ac)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: loading ? .5 : 1 }}>↑</button>
+          <input
+            id="ai-inp"
+            className="finp"
+            style={{ flex: 1 }}
+            placeholder="Ask about tasks, sprints, docs… or say a command"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && send()}
+          />
+          <button
+            onClick={toggleVoice}
+            title={listening ? 'Stop listening' : 'Voice input'}
+            style={{
+              width: 36, height: 36, borderRadius: 7, border: listening ? 'none' : '1.5px solid var(--bd2)',
+              background: listening ? '#7C3AED' : 'transparent', color: listening ? '#fff' : 'var(--tx3)',
+              fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, fontFamily: 'inherit', outline: 'none',
+              boxShadow: listening ? '0 0 0 3px #EDE9FE' : 'none', transition: 'all .2s',
+            }}
+          >
+            🎙
+          </button>
+          <button
+            onClick={() => send()}
+            disabled={loading}
+            style={{ padding: '8px 16px', borderRadius: 7, border: 'none', background: 'var(--ac)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: loading ? .5 : 1 }}
+          >
+             ↑
+          </button>
         </div>
       </div>
     </div>
