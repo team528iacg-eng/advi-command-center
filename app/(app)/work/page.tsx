@@ -5,6 +5,7 @@ import { USERS, LISTS, STATUSES, PRIORITIES, Task } from '@/lib/data';
 import NewTaskModal from '@/components/NewTaskModal';
 import TaskDetail from '@/components/TaskDetail';
 import { getSocket, joinRoom, leaveRoom } from '@/lib/socket';
+import { getSocket, joinRoom, leaveRoom } from '@/lib/socket';
 
 const today = new Date().toISOString().split('T')[0];
 
@@ -30,7 +31,7 @@ function TaskRow({ task, onClick }: { task: Task; onClick: () => void }) {
   return (
     <div className="tr" onClick={onClick}>
       <div onClick={e => e.stopPropagation()} title="Open task to change status">
-        <div className={`cbx ${isDone ? 'dc' : ''}`}>{isDone && <span style={{ color: '#fff', fontSize: 9 }}>✓</span>}</div>
+        <div className={`cbx ${isDone ? 'dc' : ''}`}>{isDone && <span style={{ color: '#fff', fontSize: 9 }}>â</span>}</div>
       </div>
       <div className="ttc">
         <PriorityDot id={task.priority} />
@@ -46,12 +47,12 @@ function TaskRow({ task, onClick }: { task: Task; onClick: () => void }) {
         </div>
       </div>
       <div className="cell" style={{ color: task.due < today && !isDone ? '#EF4444' : undefined }}>
-        {task.due ? new Date(task.due + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
+        {task.due ? new Date(task.due + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'â'}
       </div>
       <div className="cell" onClick={e => e.stopPropagation()}>
         <StatusBadge id={task.status} />
       </div>
-      <div className="cell">{task.logged ? `${task.logged}m` : '—'}</div>
+      <div className="cell">{task.logged ? `${task.logged}m` : 'â'}</div>
       <div className="cell">{task.est}m</div>
       <div />
     </div>
@@ -107,7 +108,7 @@ export default function WorkPage() {
   const { tasks, addTask, updateTask, user } = useStore();
   const selectedSpaceId = useStore(s => s.selectedSpaceId);
 
-  // ── Real-time: join space room + listen for task_updated ──
+  // ââ Real-time: join space room + listen for task_updated ââ
   useEffect(() => {
     if (!selectedSpaceId) return;
     joinRoom(selectedSpaceId);
@@ -143,9 +144,9 @@ export default function WorkPage() {
           </button>
         </div>
         <div className="vtabs">
-          <button className={`button ${view === 'list' ? 'on' : ''}`} onClick={() => setView('list')}>☸ List</button>
-          <button className={`button ${view === 'board' ? 'on' : ''}`} onClick={() => setView('board')}>⊞ Board</button>
-          <button className={`button ${view === 'cal' ? 'on' : ''}`} onClick={() => setView('cal')}>◫ Calendar</button>
+          <button className={`button ${view === 'list' ? 'on' : ''}`} onClick={() => setView('list')}>â¸ List</button>
+          <button className={`button ${view === 'board' ? 'on' : ''}`} onClick={() => setView('board')}>â Board</button>
+          <button className={`button ${view === 'cal' ? 'on' : ''}`} onClick={() => setView('cal')}>â« Calendar</button>
         </div>
         <button className="tbtn p" style={{ marginLeft: 'auto' }} onClick={() => setShowNew(true)}>+ New Task</button>
       </div>
