@@ -5,7 +5,6 @@ import { USERS, LISTS, STATUSES, PRIORITIES, Task } from '@/lib/data';
 import NewTaskModal from '@/components/NewTaskModal';
 import TaskDetail from '@/components/TaskDetail';
 import { getSocket, joinRoom, leaveRoom } from '@/lib/socket';
-import { getSocket, joinRoom, leaveRoom } from '@/lib/socket';
 
 const today = new Date().toISOString().split('T')[0];
 
