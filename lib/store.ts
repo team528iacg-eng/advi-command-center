@@ -1,10 +1,11 @@
 'use client';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Task, Message, Space, Conversation, INITIAL_TASKS, INITIAL_MESSAGES, INITIAL_CONVERSATIONS, SPACES, User } from './data';
+import { Task, Message, Space, Conversation, User, INITIAL_TASKS, INITIAL_MESSAGES, INITIAL_CONVERSATIONS, SPACES, USERS } from './data';
 
 interface AppState {
   user: User | null;
+  users: User[];
   tasks: Task[];
   messages: Message[];
   spaces: Space[];
@@ -22,12 +23,16 @@ interface AppState {
   renameSpace: (id: string, name: string) => void;
   createConversation: (conv: Conversation) => void;
   markRead: (conversationId: string) => void;
+  updateUser: (id: string, patch: Partial<User>) => void;
+  removeUser: (id: string) => void;
+  addUser: (user: User) => void;
 }
 
 export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
       user: null,
+      users: USERS,
       tasks: INITIAL_TASKS,
       messages: INITIAL_MESSAGES,
       spaces: SPACES,
@@ -53,6 +58,15 @@ export const useStore = create<AppState>()(
         set((s) => ({ conversations: [...s.conversations.filter(c => c.id !== conv.id), conv] })),
       markRead: (conversationId) =>
         set((s) => ({ lastRead: { ...s.lastRead, [conversationId]: new Date().toISOString() } })),
+      updateUser: (id, patch) =>
+        set((s) => ({
+          users: s.users.map((u) => (u.id === id ? { ...u, ...patch } : u)),
+          user: s.user?.id === id ? { ...s.user, ...patch } : s.user,
+        })),
+      removeUser: (id) =>
+        set((s) => ({ users: s.users.filter((u) => u.id !== id) })),
+      addUser: (user) =>
+        set((s) => ({ users: [...s.users, user] })),
     }),
     { name: 'advi-store' }
   )
