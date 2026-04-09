@@ -195,7 +195,7 @@ function CalendarView({ tasks, onSelect }: { tasks: Task[]; onSelect: (t: Task) 
               {d && <div style={{ fontSize: 12, fontWeight: isToday ? 800 : 400, color: isToday ? '#7C3AED' : 'var(--tx3)', marginBottom: 4 }}>{d}</div>}
               {dayTasks.map(t => {
                 const st = getStatus(t.status);
-                return <div key={t.id} className="cal-task" style=[ï background: st?.bg, color: st?.color, cursor: 'pointer' }} onClick={() => onSelect(t)}>{t.title}</div>;
+                return <div key={t.id} className="cal-task" style={{ background: st?.bg, color: st?.color, cursor: 'pointer' }} onClick={() => onSelect(t)}>{t.title}</div>;
               })}
             </div>
           );
