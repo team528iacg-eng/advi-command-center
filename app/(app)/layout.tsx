@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
@@ -8,7 +8,7 @@ import NewTaskModal from '@/components/NewTaskModal';
 import Toast, { useToast } from '@/components/Toast';
 
 const NAV = [
-  { href: '/dashboard', label: 'Dashboard', icon: '⊞', id: 'home' },
+  { href: '/dashboard', label: 'Dashboard', icon: '⊚', id: 'home' },
   { href: '/work',      label: 'My Work',   icon: '◎', id: 'work' },
   { href: '/inbox',     label: 'Inbox',     icon: '✉', id: 'inbox', badge: true },
 ];
@@ -22,13 +22,32 @@ const INTEL = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, logout, tasks, messages } = useStore();
+  const { user, logout, tasks, messages, spaces, selectedSpaceId, setSelectedSpaceId, renameSpace } = useStore();
   const [showNewTask, setShowNewTask] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameVal, setRenameVal] = useState('');
   const { toasts, addToast } = useToast();
 
   useEffect(() => {
     if (!user) router.push('/login');
   }, [user, router]);
+
+  // Auto-select first space if none selected
+  useEffect(() => {
+    if (spaces.length > 0 && !selectedSpaceId) {
+      setSelectedSpaceId(spaces[0].id);
+    }
+  }, [spaces, selectedSpaceId, setSelectedSpaceId]);
+
+  const startRename = (sp: { id: string; name: string }) => {
+    setRenamingId(sp.id);
+    setRenameVal(sp.name);
+  };
+
+  const commitRename = (id: string) => {
+    if (renameVal.trim()) renameSpace(id, renameVal.trim());
+    setRenamingId(null);
+  };
 
   if (!user) return null;
 
@@ -51,8 +70,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
-        <div className="srch" onClick={() => addToast('⌕', '⌘K opens command palette', '#7C3AED')}>
-          <span>⌕</span><span style={{ flex: 1 }}>Search…</span><span className="kbd">⌘K</span>
+        <div className="srch" onClick={() => addToast('⌕', '┈K opens command palette', '#7C3AED')}>
+          <span>⌕</span><span style={{ flex: 1 }}>Search…</span><span className="kbd">┈K</span>
         </div>
         <nav>
           {NAV.map(n => (
@@ -76,19 +95,35 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           )}
           <div className="ndiv" />
           <div className="nsec">Spaces</div>
-          {[
-            { id: '528', name: '🎬 528 Film', color: '#7C3AED', count: tasks.filter(t=>['l1','l2'].includes(t.list)).length },
-            { id: 'rz',  name: '⚡ RenderZero', color: '#0EA5E9', count: tasks.filter(t=>['l3','l4'].includes(t.list)).length },
-            { id: 'lab', name: '🧪 AI Experience Lab', color: '#10B981', count: tasks.filter(t=>t.list==='l5').length },
-          ].map(sp => (
-            <div key={sp.id} className="sp-row">
-              <div className={`sp-item ${pathname.includes(sp.id) ? 'on' : ''}`}>
-                <span className="spdot" style={{ background: sp.color }} />
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sp.name}</span>
-                <span className="nbdg">{sp.count}</span>
+          {spaces.map(sp => {
+            const count = tasks.filter(t => t.spaceId === sp.id).length;
+            const isActive = selectedSpaceId === sp.id;
+            return (
+              <div key={sp.id} className="sp-row">
+                {renamingId === sp.id ? (
+                  <input
+                    autoFocus
+                    value={renameVal}
+                    onChange={e => setRenameVal(e.target.value)}
+                    onBlur={() => commitRename(sp.id)}
+                    onKeyDown={e => { if (e.key === 'Enter') commitRename(sp.id); if (e.key === 'Escape') setRenamingId(null); }}
+                    style={{ flex: 1, margin: '0 4px', padding: '3px 8px', borderRadius: 6, border: '1.5px solid var(--ac)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
+                  />
+                ) : (
+                  <div
+                    className={`sp-item ${isActive ? 'on' : ''}`}
+                    onClick={() => setSelectedSpaceId(sp.id)}
+                    onDoubleClick={() => startRename(sp)}
+                    title="Double-click to rename"
+                  >
+                    <span className="spdot" style={{ background: sp.color }} />
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sp.name}</span>
+                    <span className="nbdg">{count}</span>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
           <div className="ndiv" />
           <div className="nsec">Intelligence</div>
           {INTEL.map(n => (
@@ -133,7 +168,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {children}
       </div>
 
-      {showNewTask && <NewTaskModal onClose={() => setShowNewTask(false)} />}
+      {showNewTask && <NewTaskModal onClose={() => setShowNewTask(false)} defaultSpaceId={selectedSpaceId} />}
       <Toast toasts={toasts} />
     </div>
   );
