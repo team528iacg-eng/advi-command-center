@@ -61,6 +61,23 @@ export default function InboxPage() {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
   }, [thread.length]);
 
+  // Real-time: join active conversation room + listen for message_sent
+  useEffect(() => {
+    if (!activeConvId) return;
+    joinRoom(activeConvId);
+    const socket = getSocket();
+    if (!socket) return;
+    const handler = (data) => {
+      if (data.userId === user?.id) return;
+      useStore.getState().sendMessage(data.message);
+    };
+    socket.on('message_sent', handler);
+    return () => {
+      socket.off('message_sent', handler);
+      leaveRoom(activeConvId);
+    };
+  }, [activeConvId, user?.id]); // eslint-disable-line
+
   // ── Real-time: join active conversation room + listen for message_sent ──
   useEffect(() => {
     if (!activeConvId) return;
