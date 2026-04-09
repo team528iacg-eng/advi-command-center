@@ -3,8 +3,9 @@ import { useState } from 'react';
 import { useStore } from '@/lib/store';
 import { LISTS, USERS, Task } from '@/lib/data';
 
-export default function NewTaskModal({ onClose }: { onClose: () => void }) {
-  const { user, addTask } = useStore();
+export default function NewTaskModal({ onClose, defaultSpaceId }: { onClose: () => void; defaultSpaceId?: string }) {
+  const { user, addTask, selectedSpaceId } = useStore();
+  const effectiveSpaceId = defaultSpaceId ?? selectedSpaceId ?? '528';
   const [title, setTitle] = useState('');
   const [list, setList] = useState('l1');
   const [priority, setPriority] = useState('normal');
@@ -20,7 +21,7 @@ export default function NewTaskModal({ onClose }: { onClose: () => void }) {
     if (!title.trim()) return;
     const task: Task = {
       id: 't' + Date.now(),
-      title: title.trim(), list, status, priority,
+      title: title.trim(), list, spaceId: effectiveSpaceId, status, priority,
       assignees, due, est, logged: 0, description: desc,
       subtasks: [], comments: [], tags: [],
       createdAt: new Date().toISOString(),
