@@ -54,11 +54,26 @@ export default function TaskDetail({ task, onClose }: { task: Task; onClose: () 
           <input value={title} onChange={e => setTitle(e.target.value)} onBlur={() => save({ title })} style={{ width: '100%', fontSize: 20, fontWeight: 700, background: 'transparent', border: 'none', borderBottom: '1.5px solid var(--bd)', borderRadius: 0, padding: '0 0 14px', marginBottom: 20, outline: 'none', fontFamily: 'inherit', color: 'var(--tx)' }} />
           <div className="mg">
             <span className="ml">List</span><span style={{ fontSize: 12, fontWeight: 600, color: lt?.color }}>{lt?.name}</span>
+            <span className="ml">Priority</span>
+            <select value={task.priority} onChange={e => save({ priority: e.target.value })} style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 6, border: '1.5px solid var(--bd)', cursor: 'pointer', fontFamily: 'inherit', color: pr?.color, background: pr?.color ? pr.color + '18' : 'var(--sf)' }}>
+              {PRIORITIES.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+            </select>
             <span className="ml">Assignees</span>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {task.assignees.map(uid => { const u = USERS.find(x => x.id === uid); return u ? <div key={uid} className="av" style={{ width: 24, height: 24, fontSize: 9, background: u.bg, color: u.color }} title={u.name}>{u.initials}</div> : null; })}
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+              {USERS.map(u => {
+                const assigned = task.assignees.includes(u.id);
+                return (
+                  <button key={u.id} onClick={() => save({ assignees: assigned ? task.assignees.filter(x => x !== u.id) : [...task.assignees, u.id] })}
+                    title={u.name}
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px 2px 3px', borderRadius: 20, border: `1.5px solid ${assigned ? u.color : 'var(--bd2)'}`, background: assigned ? u.bg : 'var(--bg)', color: assigned ? u.color : 'var(--tx3)', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <div className="av" style={{ width: 18, height: 18, fontSize: 7, background: u.bg, color: u.color }}>{u.initials}</div>
+                    {u.name.split(' ')[0]}
+                  </button>
+                );
+              })}
             </div>
-            <span className="ml">Due</span><span style={{ fontSize: 12, color: 'var(--tx2)', fontWeight: 600 }}>{task.due ? new Date(task.due + 'T00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—'}</span>
+            <span className="ml">Due Date</span>
+            <input type="date" value={task.due ?? ''} onChange={e => save({ due: e.target.value })} style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx2)', padding: '3px 8px', borderRadius: 6, border: '1.5px solid var(--bd)', background: 'var(--bg)', fontFamily: 'inherit', cursor: 'pointer' }} />
             <span className="ml">Estimate</span><span style={{ fontSize: 12, color: 'var(--tx2)' }}>{task.est}min</span>
             <span className="ml">Logged</span><span style={{ fontSize: 12, color: 'var(--tx2)' }}>{task.logged}min</span>
           </div>
