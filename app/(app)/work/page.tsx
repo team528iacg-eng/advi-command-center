@@ -25,9 +25,10 @@ function PriorityDot({ id }: { id: string }) {
 function TaskRow({ task, onClick }: { task: Task; onClick: () => void }) {
   const { updateTask } = useStore();
   const isDone = task.status === 'done';
+
   return (
     <div className="tr" onClick={onClick}>
-      <div onClick={e => { e.stopPropagation(); updateTask(task.id, { status: isDone ? 'todo' : 'done' }); }}>
+      <div onClick={e => e.stopPropagation()} title="Open task to change status">
         <div className={`cbx ${isDone ? 'dc' : ''}`}>{isDone && <span style={{ color: '#fff', fontSize: 9 }}>✓</span>}</div>
       </div>
       <div className="ttc">
@@ -37,7 +38,10 @@ function TaskRow({ task, onClick }: { task: Task; onClick: () => void }) {
       </div>
       <div className="cell">
         <div style={{ display: 'flex', gap: 3 }}>
-          {task.assignees.slice(0, 3).map(uid => { const u = getUser(uid); return u ? <div key={uid} className="av" title={u.name} style={{ width: 20, height: 20, fontSize: 8, background: u.bg, color: u.color }}>{u.initials}</div> : null; })}
+          {task.assignees.slice(0, 3).map(uid => {
+            const u = getUser(uid);
+            return u ? <div key={uid} className="av" title={u.name} style={{ width: 20, height: 20, fontSize: 8, background: u.bg, color: u.color }}>{u.initials}</div> : null;
+          })}
         </div>
       </div>
       <div className="cell" style={{ color: task.due < today && !isDone ? '#EF4444' : undefined }}>
@@ -112,8 +116,8 @@ export default function WorkPage() {
         </div>
         <div className="vtabs">
           <button className={`vtab ${view === 'list' ? 'on' : ''}`} onClick={() => setView('list')}>☰ List</button>
-          <button className={`vtab ${view === 'board' ? 'on' : ''}`} onClick={() => setView('board')}>⊚' Board</button>
-          <button className={`vtab ${view === 'cal' ? 'on' : ''}`} onClick={() => setView('cal')}>◫� Calendar</button>
+          <button className={`vtab ${view === 'board' ? 'on' : ''}`} onClick={() => setView('board')}>⊞ Board</button>
+          <button className={`vtab ${view === 'cal' ? 'on' : ''}`} onClick={() => setView('cal')}>◫ Calendar</button>
         </div>
         <button className="tbtn p" style={{ marginLeft: 'auto' }} onClick={() => setShowNew(true)}>+ New Task</button>
       </div>
@@ -159,14 +163,20 @@ function CalendarView({ tasks, onSelect }: { tasks: Task[]; onSelect: (t: Task) 
   const year = now.getFullYear(); const month = now.getMonth();
   const first = new Date(year, month, 1).getDay();
   const days = new Date(year, month + 1, 0).getDate();
-  const cells = Array.from({ length: 42 }, (_, i) => { const d = i - first + 1; return d >= 1 && d <= days ? d : null; });
+  const cells = Array.from({ length: 42 }, (_, i) => {
+    const d = i - first + 1;
+    return d >= 1 && d <= days ? d : null;
+  });
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h3 style={{ fontSize: 16, fontWeight: 700 }}>{now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 1, background: 'var(--bd)', borderRadius: 12, overflow: 'hidden', border: '1.5px solid var(--bd)' }}>
-        {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => <div key={d} style={{ background: 'var(--bg)', padding: '8px 0', textAlign: 'center', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', letterSpacing: '.1em' }}>{d}</div>)}
+        {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
+          <div key={d} style={{ background: 'var(--bg)', padding: '8px 0', textAlign: 'center', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', letterSpacing: '.1em' }}>{d}</div>
+        ))}
         {cells.map((d, i) => {
           const dateStr = d ? `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}` : '';
           const dayTasks = d ? tasks.filter(t => t.due === dateStr) : [];
@@ -174,7 +184,10 @@ function CalendarView({ tasks, onSelect }: { tasks: Task[]; onSelect: (t: Task) 
           return (
             <div key={i} style={{ background: isToday ? '#EDE9FE' : 'var(--sf)', minHeight: 88, padding: '6px 8px' }}>
               {d && <div style={{ fontSize: 12, fontWeight: isToday ? 800 : 400, color: isToday ? '#7C3AED' : 'var(--tx3)', marginBottom: 4 }}>{d}</div>}
-              {dayTasks.map(t => { const st = getStatus(t.status); return <div key={t.id} className="cal-task" style={{ background: st?.bg, color: st?.color, cursor: 'pointer' }} onClick={() => onSelect(t)}>{t.title}</div>; })}
+              {dayTasks.map(t => {
+                const st = getStatus(t.status);
+                return <div key={t.id} className="cal-task" style={{ background: st?.bg, color: st?.color, cursor: 'pointer' }} onClick={() => onSelect(t)}>{t.title}</div>;
+              })}
             </div>
           );
         })}
