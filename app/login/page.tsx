@@ -10,6 +10,7 @@ import { mockGoogleLogin } from '@/hooks/useAuth';
 export default function LoginPage() {
   const router = useRouter();
   const login = useStore(s => s.login);
+  const initializeFromDB = useStore(s => s.initializeFromDB);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,17 +19,19 @@ export default function LoginPage() {
     const u = authenticate(e ?? email, p ?? password);
     if (!u) { setError('Invalid email or password.'); return; }
     login(u);
+    initializeFromDB();
     router.push('/dashboard');
   };
 
   const loginAs = (id: string) => {
     const u = USERS.find(x => x.id === id);
-    if (u) { login(u); router.push('/dashboard'); }
+    if (u) { login(u); initializeFromDB(); router.push('/dashboard'); }
   };
 
   const loginWithGoogle = () => {
     const u = mockGoogleLogin();
     login(u);
+    initializeFromDB();
     router.push('/dashboard');
   };
 
@@ -62,7 +65,7 @@ export default function LoginPage() {
                   <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 2 }}>{f.title}</div>
                   <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{f.desc}</div>
                 </div>
-              </div>
+      2       </div>
             ))}
           </div>
         </div>
