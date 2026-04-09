@@ -79,7 +79,7 @@ export const INITIAL_MESSAGES: Message[] = [
   { id:'m4', from:'pr', to:'hk', text:'Studio is confirmed for VO tomorrow at 2pm. Should we do 2 takes?', at:'2026-03-16T09:45' },
   { id:'m5', from:'vm', to:'hk', text:'Scene 4 lighting is off — need to revisit before client.', at:'2026-03-16T10:00' },
   { id:'m6', from:'hk', to:'ds', text:'Great! Send the wav when done.', at:'2026-03-16T09:20' },
-  { id:'m7', from:'hk', to:'pr', text:'Yes, let's do 3 takes. Book an extra hour just in case.', at:'2026-03-16T10:05' },
+  { id:'m7', from:'hk', to:'pr', text:"Yes, let's do 3 takes. Book an extra hour just in case.", at:'2026-03-16T10:05' },
 ];
 
 export const INITIAL_CONVERSATIONS: Conversation[] = [
