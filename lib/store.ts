@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Task, Message, Space, Conversation, User, INITIAL_TASKS, INITIAL_MESSAGES, INITIAL_CONVERSATIONS, SPACES, USERS } from './data';
+import { getSocket } from './socket';
 
 // Fire-and-forget API sync — never blocks UI, never throws
 const sync = (url: string, method = 'POST', body?: object) => {
@@ -84,6 +85,16 @@ export const useStore = create<AppState>()(
       updateTask: (id, patch) => {
         set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) }));
         sync(`/api/tasks/${id}`, 'PUT', patch);
+        // Real-time: broadcast to space room
+        const task = get().tasks.find(t => t.id === id);
+        if (task?.spaceId) {
+          getSocket()?.emit('task_updated', {
+            roomId: task.spaceId,
+            id,
+            patch,
+            userId: get().user?.id ?? '',
+          });
+        }
       },
       deleteTask: (id) => {
         set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) }));
@@ -92,6 +103,14 @@ export const useStore = create<AppState>()(
       sendMessage: (msg) => {
         set((s) => ({ messages: [...s.messages, msg] }));
         sync('/api/messages', 'POST', msg);
+        // Real-time: broadcast to conversation room
+        if (msg.conversationId) {
+          getSocket()?.emit('message_sent', {
+            roomId: msg.conversationId,
+            message: msg,
+            userId: get().user?.id ?? '',
+          });
+        }
       },
       setSelectedSpaceId: (id) => set({ selectedSpaceId: id }),
       createSpace: (name) => {
